@@ -1,0 +1,102 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { motion } from "framer-motion";
+import Image from "next/image";
+import { useState } from "react";
+import { Menu, X } from "lucide-react";
+
+export default function Navbar() {
+  const pathname = usePathname();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const links = [
+    { href: "/", label: "ANASAYFA" },
+    { href: "/hakkimizda", label: "HAKKIMIZDA" },
+    { href: "/uyeler", label: "ÜYELER" },
+    { href: "/faaliyetler", label: "FAALİYETLER" },
+    { href: "/galeri", label: "GALERİ" },
+    { href: "/iletisim", label: "İLETİŞİM" },
+  ];
+
+  return (
+    <motion.nav
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="fixed top-0 left-0 right-0 z-40 bg-dark/80 backdrop-blur-xl border-b border-white/10"
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-20">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-3 group">
+            <Image
+              src="/logo.png"
+              alt="68 Riders"
+              width={50}
+              height={50}
+              className="w-12 h-12 transition-transform group-hover:scale-110"
+            />
+            <span className="text-xl font-display font-bold hidden sm:block">
+              68 <span className="text-primary">RIDERS</span>
+            </span>
+          </Link>
+
+          {/* Desktop Menu */}
+          <div className="hidden md:flex items-center gap-8">
+            {links.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`text-sm font-bold tracking-wider transition-colors relative group ${
+                  pathname === link.href ? "text-primary" : "text-white hover:text-primary"
+                }`}
+              >
+                {link.label}
+                <span
+                  className={`absolute -bottom-1 left-0 h-0.5 bg-primary transition-all ${
+                    pathname === link.href ? "w-full" : "w-0 group-hover:w-full"
+                  }`}
+                />
+              </Link>
+            ))}
+          </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden text-white p-2"
+          >
+            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Menu */}
+      {mobileMenuOpen && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          exit={{ opacity: 0, height: 0 }}
+          className="md:hidden bg-dark/95 backdrop-blur-xl border-t border-white/10"
+        >
+          <div className="px-4 py-6 space-y-4">
+            {links.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className={`block text-lg font-bold tracking-wider transition-colors ${
+                  pathname === link.href ? "text-primary" : "text-white hover:text-primary"
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
+        </motion.div>
+      )}
+    </motion.nav>
+  );
+}
