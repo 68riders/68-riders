@@ -3,23 +3,18 @@
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { 
-  Calendar, 
-  Image as ImageIcon, 
-  Mail, 
-  Plus, 
-  Trash2, 
-  Edit,
-  Home,
-  Info,
-  Users as UsersIcon,
-  Settings,
-  Eye,
-  Save,
-  X,
-  Shield,
-  AlertTriangle
-} from "lucide-react";
+import { Shield } from "lucide-react";
+import dynamic from "next/dynamic";
+
+// Admin panelini dinamik import et
+const AdminPanelContent = dynamic(() => import("./admin-panel"), {
+  ssr: false,
+  loading: () => (
+    <div className="fixed inset-0 bg-dark flex items-center justify-center">
+      <div className="text-white text-xl">Yükleniyor...</div>
+    </div>
+  ),
+});
 
 export default function AdminLogin() {
   const router = useRouter();
@@ -40,8 +35,13 @@ export default function AdminLogin() {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Şifre kontrolü - Environment variable'dan gelecek
-    const correctPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "Aksaray6878.";
+    // Şifre kontrolü - SADECE environment variable'dan
+    const correctPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
+    
+    if (!correctPassword) {
+      setError("Sistem hatası! Lütfen yöneticiyle iletişime geçin.");
+      return;
+    }
     
     if (password === correctPassword) {
       sessionStorage.setItem("admin_auth_68riders", "authenticated");
@@ -121,25 +121,6 @@ export default function AdminLogin() {
     );
   }
 
-  // Admin panel içeriği buraya gelecek - şimdilik import edelim
-  return (
-    <div className="min-h-screen bg-dark pt-20 pb-20 px-4">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-display font-bold">Admin Paneli</h1>
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-          >
-            Çıkış Yap
-          </button>
-        </div>
-        
-        <div className="glass-panel p-8 rounded-xl text-center">
-          <p className="text-xl mb-4">Admin paneli yükleniyor...</p>
-          <p className="text-gray-400">Lütfen bekleyin, sayfa yeniden yüklenecek.</p>
-        </div>
-      </div>
-    </div>
-  );
+  // Authenticated - Show admin panel
+  return <AdminPanelContent onLogout={handleLogout} />;
 }
