@@ -119,15 +119,7 @@ export default function Home() {
           webkit-playsinline="true"
           x5-playsinline="true"
           x-webkit-airplay="allow"
-          className="min-w-full min-h-full object-cover"
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            transform: 'translate3d(0, 0, 0)',
-            backfaceVisibility: 'hidden',
-            WebkitBackfaceVisibility: 'hidden'
-          }}
+          className="w-full h-full object-cover md:w-auto md:h-full md:max-w-[80vh] md:object-contain"
         >
           <source src="/video.mp4" type="video/mp4" />
         </video>
