@@ -694,12 +694,14 @@ function MemberModal({ member, onSave, onClose }: any) {
     bio: "",
     joinDate: "",
     totalEvents: 0,
-    totalKm: 0
+    totalKm: 0,
+    gallery: []
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedCoverFile, setSelectedCoverFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState(member?.photo || "");
   const [coverPreviewUrl, setCoverPreviewUrl] = useState(member?.coverImage || "");
+  const [galleryInput, setGalleryInput] = useState("");
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -766,6 +768,48 @@ function MemberModal({ member, onSave, onClose }: any) {
         img.src = reader.result as string;
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleGalleryFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const newGallery = [...(formData.gallery || [])];
+      let filesProcessed = 0;
+      
+      Array.from(files).forEach((file) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            let width = img.width;
+            let height = img.height;
+            const maxWidth = 800; // Galeri için 800px
+            
+            if (width > maxWidth) {
+              height = (height * maxWidth) / width;
+              width = maxWidth;
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            ctx?.drawImage(img, 0, 0, width, height);
+            
+            const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+            newGallery.push(compressedBase64);
+            filesProcessed++;
+            
+            if (filesProcessed === files.length) {
+              setFormData({ ...formData, gallery: newGallery });
+            }
+          };
+          img.src = reader.result as string;
+        };
+        reader.readAsDataURL(file);
+      });
     }
   };
 
@@ -1052,6 +1096,79 @@ function MemberModal({ member, onSave, onClose }: any) {
                 />
               </div>
             </div>
+          </div>
+
+          <div className="border-t border-white/10 pt-4">
+            <h3 className="text-lg font-bold mb-4 text-primary">📸 GALERİ (Profil Sayfasında Görünecek)</h3>
+            
+            <div className="mb-3">
+              <label className="block text-sm font-bold mb-2">Bilgisayardan Fotoğraf Seç (Çoklu)</label>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleGalleryFilesChange}
+                className="w-full px-4 py-3 bg-dark/50 border border-white/10 rounded-lg focus:border-primary focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary/80"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Birden fazla fotoğraf seçebilirsiniz (Ctrl/Cmd tuşuna basılı tutun). Profil sayfasında galeri olarak görünecek.
+              </p>
+            </div>
+
+            <div className="flex gap-2 mb-3">
+              <input
+                type="url"
+                value={galleryInput}
+                onChange={(e) => setGalleryInput(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (galleryInput.trim()) {
+                      setFormData({ ...formData, gallery: [...(formData.gallery || []), galleryInput.trim()] });
+                      setGalleryInput("");
+                    }
+                  }
+                }}
+                className="flex-1 px-4 py-2 bg-dark/50 border border-white/10 rounded-lg focus:border-primary focus:outline-none text-sm"
+                placeholder="Veya Fotoğraf URL'si ekleyin"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  if (galleryInput.trim()) {
+                    setFormData({ ...formData, gallery: [...(formData.gallery || []), galleryInput.trim()] });
+                    setGalleryInput("");
+                  }
+                }}
+                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/80 text-sm font-bold"
+              >
+                EKLE
+              </button>
+            </div>
+            
+            {formData.gallery && formData.gallery.length > 0 && (
+              <div className="grid grid-cols-4 gap-2">
+                {formData.gallery.map((photo: string, index: number) => (
+                  <div key={index} className="relative group">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={photo} alt={`Gallery ${index + 1}`} className="w-full h-24 object-cover rounded-lg" />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newGallery = formData.gallery.filter((_: any, i: number) => i !== index);
+                        setFormData({ ...formData, gallery: newGallery });
+                      }}
+                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <p className="text-xs text-gray-500 mt-2">
+              {formData.gallery?.length || 0} fotoğraf eklendi. Bu fotoğraflar üyenin profil sayfasında galeri olarak görünecek.
+            </p>
           </div>
 
           <div className="flex gap-3 pt-4">
