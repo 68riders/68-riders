@@ -13,7 +13,30 @@ export default function Home() {
   useEffect(() => {
     // Video'yu başlat (sessiz)
     if (videoRef.current) {
-      videoRef.current.play().catch(err => console.log("Video autoplay error:", err));
+      // Mobil için video yükleme optimizasyonu
+      videoRef.current.load();
+      
+      // Video hazır olduğunda oynat
+      const playVideo = () => {
+        if (videoRef.current) {
+          videoRef.current.play().catch(err => {
+            console.log("Video autoplay error:", err);
+            // Hata olursa tekrar dene
+            setTimeout(() => {
+              if (videoRef.current) {
+                videoRef.current.play().catch(() => {});
+              }
+            }, 100);
+          });
+        }
+      };
+
+      // Video yüklendiğinde oynat
+      if (videoRef.current.readyState >= 3) {
+        playVideo();
+      } else {
+        videoRef.current.addEventListener('loadeddata', playVideo, { once: true });
+      }
     }
 
     // Kullanıcı ilk etkileşiminde sesi aç
@@ -84,7 +107,7 @@ export default function Home() {
       <LoadingScreen />
       
       {/* Video Container - Ortalanmış */}
-      <div className="absolute inset-0 flex items-center justify-center">
+      <div className="absolute inset-0 flex items-center justify-center bg-dark overflow-hidden">
         <video
           ref={videoRef}
           autoPlay
@@ -92,10 +115,19 @@ export default function Home() {
           muted
           playsInline
           controls={false}
-          preload="auto"
+          preload="metadata"
           webkit-playsinline="true"
           x5-playsinline="true"
-          className="w-full h-full object-cover md:w-auto md:h-full md:max-w-[80vh] md:object-contain"
+          x-webkit-airplay="allow"
+          className="min-w-full min-h-full object-cover"
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            transform: 'translate3d(0, 0, 0)',
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden'
+          }}
         >
           <source src="/video.mp4" type="video/mp4" />
         </video>
